@@ -98,7 +98,7 @@ func UsersDelete(c *gin.Context) {
 
 func UsersGetPaginated(c *gin.Context) {
 	location := c.Query("location")
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "5")
 	pageStr := c.DefaultQuery("page", "1")
 
 	limit, _ := strconv.Atoi(limitStr)

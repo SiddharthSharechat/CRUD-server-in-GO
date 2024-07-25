@@ -16,9 +16,9 @@ func main() {
 
 	r.POST("/users", Controllers.UsersCreate)
 	r.GET("/users/:id", Controllers.UsersGet)
-	r.PUT("users/:id", Controllers.UsersUpdate)
-	r.DELETE("users/:id", Controllers.UsersDelete)
-	r.GET("users", Controllers.UsersGetPaginated)
+	r.PUT("/users/:id", Controllers.UsersUpdate)
+	r.DELETE("/users/:id", Controllers.UsersDelete)
+	r.GET("/users", Controllers.UsersGetPaginated)
 
 	r.Run()
 }
