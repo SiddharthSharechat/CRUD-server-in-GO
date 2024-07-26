@@ -9,6 +9,7 @@ import (
 func init() {
 	Initializers.LoadEnvVariables()
 	Initializers.InitDb()
+	Initializers.InitCache()
 }
 
 func main() {

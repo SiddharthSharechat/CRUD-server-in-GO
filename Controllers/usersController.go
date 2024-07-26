@@ -4,6 +4,7 @@ import (
 	"github.com/SiddharthSharechat/CRUDGo/Initializers"
 	"github.com/SiddharthSharechat/CRUDGo/Mappers"
 	"github.com/SiddharthSharechat/CRUDGo/Models"
+	"github.com/SiddharthSharechat/CRUDGo/Repository"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"strconv"
@@ -44,13 +45,24 @@ func UsersCreate(c *gin.Context) {
 
 func UsersGet(c *gin.Context) {
 	id := c.Param("id")
+	var userResCache Models.UserResponse
+	res := Repository.GetValue(id, &userResCache)
+	if res {
+		c.JSON(200, gin.H{
+			"user":       userResCache,
+			"from_cache": true,
+		})
+		return
+	}
 
 	var user Models.User
 	Initializers.Db.First(&user, "id = ?", id)
 
 	userResponse := Mappers.UserResponseMapper(user)
+	Repository.SetValue(id, userResponse)
 	c.JSON(200, gin.H{
-		"user": userResponse,
+		"user":       userResponse,
+		"from_cache": false,
 	})
 }
 
@@ -77,6 +89,13 @@ func UsersUpdate(c *gin.Context) {
 	)
 
 	userResponse := Mappers.UserResponseMapper(user)
+
+	var userResCache Models.UserResponse
+	res := Repository.GetValue(id, userResCache)
+	if res {
+		Repository.SetValue(id, userResponse)
+	}
+
 	c.JSON(200, gin.H{
 		"user": userResponse,
 	})
@@ -84,6 +103,12 @@ func UsersUpdate(c *gin.Context) {
 
 func UsersDelete(c *gin.Context) {
 	id := c.Param("id")
+
+	var userResCache Models.UserResponse
+	res := Repository.GetValue(id, userResCache)
+	if res {
+		Repository.Expire(id)
+	}
 
 	var user Models.User
 	Initializers.Db.First(&user, "id = ?", id)
