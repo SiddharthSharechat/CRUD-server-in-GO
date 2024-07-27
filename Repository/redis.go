@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/SiddharthSharechat/CRUDGo/Initializers"
+	"github.com/SiddharthSharechat/CRUDGo/Models"
 	"log"
 	"time"
 )
@@ -39,4 +40,28 @@ func GetValue(key string, ptr interface{}) bool {
 
 func Expire(key string) {
 	Initializers.RDb.Expire(ctx, key, 0)
+}
+
+func RPush(key string, value interface{}) {
+	val, _ := json.Marshal(&value)
+	Initializers.RDb.RPush(ctx, key, val)
+	Initializers.RDb.Expire(ctx, key, time.Minute)
+}
+
+func LGet(key string, storedUsers *[]Models.UserResponse) bool {
+	storedUsersJSON, _ := Initializers.RDb.LRange(ctx, key, 0, -1).Result()
+
+	if len(storedUsersJSON) == 0 {
+		return false
+	}
+
+	for _, userJSON := range storedUsersJSON {
+		var user Models.UserResponse
+		err := json.Unmarshal([]byte(userJSON), &user)
+		if err != nil {
+			return false
+		}
+		*storedUsers = append(*storedUsers, user)
+	}
+	return true
 }

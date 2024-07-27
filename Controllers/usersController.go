@@ -1,6 +1,7 @@
 package Controllers
 
 import (
+	"fmt"
 	"github.com/SiddharthSharechat/CRUDGo/Initializers"
 	"github.com/SiddharthSharechat/CRUDGo/Mappers"
 	"github.com/SiddharthSharechat/CRUDGo/Models"
@@ -41,6 +42,7 @@ func UsersCreate(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"user": userResponse,
 	})
+
 }
 
 func UsersGet(c *gin.Context) {
@@ -129,6 +131,20 @@ func UsersGetPaginated(c *gin.Context) {
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
 
+	key := fmt.Sprintf("%s:%s:%s", location, page, limit)
+
+	var storedUsers []Models.UserResponse
+	isCached := Repository.LGet(key, &storedUsers)
+	if isCached {
+		c.JSON(200, gin.H{
+			"page":       page,
+			"limit":      limit,
+			"users":      storedUsers,
+			"from cache": true,
+		})
+		return
+	}
+
 	offset := (page - 1) * limit
 
 	var users []Models.User
@@ -137,6 +153,7 @@ func UsersGetPaginated(c *gin.Context) {
 	var userResponses []Models.UserResponse
 	for _, user := range users {
 		userResponse := Mappers.UserResponseMapper(user)
+		Repository.RPush(key, userResponse)
 		userResponses = append(userResponses, userResponse)
 	}
 
