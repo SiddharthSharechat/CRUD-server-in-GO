@@ -3,6 +3,7 @@ package Repository
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/SiddharthSharechat/CRUDGo/Initializers"
 	"github.com/SiddharthSharechat/CRUDGo/Models"
 	"log"
@@ -49,6 +50,7 @@ func RPush(key string, value interface{}) {
 }
 
 func LGet(key string, storedUsers *[]Models.UserResponse) bool {
+	fmt.Printf("%s is the key for pagination api\n", key)
 	storedUsersJSON, _ := Initializers.RDb.LRange(ctx, key, 0, -1).Result()
 
 	if len(storedUsersJSON) == 0 {
@@ -64,4 +66,13 @@ func LGet(key string, storedUsers *[]Models.UserResponse) bool {
 		*storedUsers = append(*storedUsers, user)
 	}
 	return true
+}
+
+func ClearPaginationCache(key string) {
+	storedCachekeys, _ := Initializers.RDb.LRange(ctx, key, 0, -1).Result()
+	for _, storedCachekey := range storedCachekeys {
+		k := storedCachekey[1 : len(storedCachekey)-1]
+		Initializers.RDb.Expire(ctx, k, time.Second)
+	}
+	Initializers.RDb.Expire(ctx, key, 0)
 }

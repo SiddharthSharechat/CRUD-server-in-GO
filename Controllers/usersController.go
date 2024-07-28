@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const paginationKey = "pagination"
+
 func UsersCreate(c *gin.Context) {
 
 	var body struct {
@@ -37,6 +39,8 @@ func UsersCreate(c *gin.Context) {
 		c.Status(400)
 		return
 	}
+
+	Repository.ClearPaginationCache(paginationKey)
 
 	userResponse := Mappers.UserResponseMapper(user)
 	c.JSON(200, gin.H{
@@ -98,6 +102,8 @@ func UsersUpdate(c *gin.Context) {
 		Repository.SetValue(id, userResponse)
 	}
 
+	Repository.ClearPaginationCache(paginationKey)
+
 	c.JSON(200, gin.H{
 		"user": userResponse,
 	})
@@ -131,7 +137,7 @@ func UsersGetPaginated(c *gin.Context) {
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
 
-	key := fmt.Sprintf("%s:%s:%s", location, page, limit)
+	key := fmt.Sprintf("%s:%d:%d", location, page, limit)
 
 	var storedUsers []Models.UserResponse
 	isCached := Repository.LGet(key, &storedUsers)
@@ -151,6 +157,7 @@ func UsersGetPaginated(c *gin.Context) {
 	Initializers.Db.Where("location = ?", location).Order("created_at ASC").Offset(offset).Limit(limit).Find(&users)
 
 	var userResponses []Models.UserResponse
+	Repository.RPush(paginationKey, key)
 	for _, user := range users {
 		userResponse := Mappers.UserResponseMapper(user)
 		Repository.RPush(key, userResponse)
