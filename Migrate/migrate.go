@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/SiddharthSharechat/CRUDGo/Initializers"
 	"github.com/SiddharthSharechat/CRUDGo/Models"
 )
@@ -11,5 +12,9 @@ func init() {
 }
 
 func main() {
-	Initializers.Db.AutoMigrate(&Models.User{})
+	err := Initializers.Db.AutoMigrate(&Models.User{})
+	if err != nil {
+		fmt.Printf("Migration Failed with %s", err)
+		return
+	}
 }
