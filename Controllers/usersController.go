@@ -124,7 +124,7 @@ func UsersDelete(c *gin.Context) {
 	Initializers.Db.Delete(&user)
 
 	Repository.ClearPaginationCache(paginationKey)
-	s
+
 	userResponse := Mappers.UserResponseMapper(user)
 	c.JSON(200, gin.H{
 		"deleted_record": userResponse,
